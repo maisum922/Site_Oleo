@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#142b45">
+<title>Controle de Equipamentos</title>
+<style>
+:root {
+  --site-primary: #183653;
+  --site-on-primary: #ffffff;
+  --site-secondary: #e8eff5;
+  --site-on-secondary: #183653;
+  --site-background: #f3f6f9;
+  --site-on-background: #172536;
+  --site-font-body: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --site-font-heading: Inter, ui-sans-serif, system-ui, sans-serif;
+  --site-heading-scale: 1;
+  --site-spacing-scale: 1;
+  --site-radius-scale: 1;
+  --site-decoration-opacity: 1;
+  color-scheme: light dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font-family: var(--site-font-body); background: var(--site-background); color: var(--site-on-background); }
+#app { min-height: 100vh; background-color: light-dark(var(--site-background), #111923); color: light-dark(var(--site-on-background), #edf3f8); border-radius: 0; }
+header { background: var(--site-primary); color: var(--site-on-primary); padding: calc(22px * var(--site-spacing-scale)) max(18px, calc((100vw - 980px)/2)); }
+.header-inner { max-width: 980px; margin: auto; display:flex; justify-content:space-between; align-items:center; gap:14px; }
+.brand { display:flex; align-items:center; gap:12px; }
+.logo { width:42px; height:42px; border-radius:13px; background:rgba(255,255,255,.14); display:grid; place-items:center; font-size:22px; }
+h1 { font: 750 calc(21px * var(--site-heading-scale))/1.15 var(--site-font-heading); margin:0; letter-spacing:-.5px; }
+.header-sub { color:#c7d7e5; font-size:12px; margin-top:4px; }
+main { max-width:980px; margin:auto; padding:20px 16px 48px; }
+.top-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:18px; }
+.btn { border:0; border-radius:calc(12px * var(--site-radius-scale)); padding:12px 16px; font-weight:700; font-size:14px; cursor:pointer; min-height:44px; }
+.btn-primary { background:var(--site-primary); color:var(--site-on-primary); }
+.btn-secondary { background:var(--site-secondary); color:var(--site-on-secondary); }
+.btn-danger { background:#fee8e7; color:#a12a25; }
+.btn-ghost { background:transparent; border:1px solid var(--border); color:inherit; }
+.search { flex:1; min-width:190px; position:relative; }
+.search input { width:100%; }
+input, select, textarea { width:100%; padding:12px 13px; border:1px solid var(--border); border-radius:10px; background:light-dark(#fff,#1c2937); color:light-dark(#172536,#edf3f8); font:inherit; font-size:14px; outline:none; }
+input:focus, select:focus, textarea:focus { border-color:#4384b8; box-shadow:0 0 0 3px rgba(67,132,184,.15); }
+label { display:block; font-size:12px; font-weight:700; margin:0 0 6px; color:light-dark(#536579,#b9c8d6); }
+.field { min-width:0; }
+.form-card, .list-card { background:light-dark(#fff,#172330); border:1px solid var(--border); border-radius:16px; padding:18px; box-shadow:0 5px 18px rgba(25,48,70,.04); margin-bottom:16px; }
+.section-title { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 0 14px; font-size:15px; font-weight:800; }
+.section-title span { color:#6f8498; font-size:11px; font-weight:600; }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+.grid.three { grid-template-columns:repeat(3,minmax(0,1fr)); }
+.full { grid-column:1/-1; }
+.form-section { padding:17px 0; border-top:1px solid var(--border); }
+.form-section:first-child { border-top:0; padding-top:0; }
+.filter-row { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+.filter-row .field label { font-size:11px; }
+.oil-row { display:grid; grid-template-columns:minmax(0,2fr) minmax(100px,1fr); gap:10px; margin-bottom:12px; }
+.form-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:8px; }
+.hidden { display:none !important; }
+.list-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; }
+.count { color:#6f8498; font-size:12px; font-weight:700; }
+.equipment { border:1px solid var(--border); border-radius:13px; padding:14px; margin-top:10px; display:flex; justify-content:space-between; gap:12px; align-items:center; }
+.equipment-main { min-width:0; }
+.equipment-name { font-weight:800; font-size:15px; overflow-wrap:anywhere; }
+.equipment-meta { color:#74869a; font-size:12px; margin-top:5px; }
+.equipment-actions { display:flex; gap:6px; flex-shrink:0; }
+.icon-btn { width:38px; height:38px; border:1px solid var(--border); border-radius:10px; background:transparent; color:inherit; cursor:pointer; font-size:16px; }
+.empty { text-align:center; padding:34px 15px; color:#718398; }
+.empty strong { display:block; color:inherit; margin:8px 0 4px; }
+.detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.detail-item { background:light-dark(#f4f7fa,#202e3c); border-radius:10px; padding:11px; min-width:0; }
+.detail-item small { display:block; color:#74869a; font-size:11px; margin-bottom:4px; }
+.detail-item b { font-size:13px; overflow-wrap:anywhere; }
+.modal-backdrop { position:fixed; inset:0; background:rgba(6,16,28,.58); display:flex; align-items:flex-end; justify-content:center; z-index:10; padding:12px; }
+.modal { width:min(100%,650px); max-height:88vh; overflow:auto; background:light-dark(#fff,#172330); border-radius:18px; padding:20px; }
+.modal-head { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:16px; }
+.modal-head h2 { font-size:18px; margin:0; }
+.toast { position:fixed; bottom:18px; left:50%; transform:translateX(-50%); background:#142b45; color:#fff; padding:12px 16px; border-radius:12px; box-shadow:0 8px 24px #0003; z-index:20; font-size:13px; }
+.note { font-size:11px; color:#718398; margin-top:12px; line-height:1.5; }
+:root { --border: light-dark(#dce4eb,#344454); }
+@media (max-width:600px) {
+  main { padding:15px 12px 36px; }
+  header { padding:17px 15px; }
+  h1 { font-size:19px; }
+  .grid { grid-template-columns:1fr 1fr; gap:11px; }
+  .grid.three, .filter-row { grid-template-columns:1fr; }
+  .filter-row { gap:8px; }
+  .filter-row .field label { font-size:12px; }
+  .equipment { align-items:flex-start; }
+  .equipment-actions { flex-direction:column; }
+  .form-card, .list-card { padding:15px; }
+  .top-actions .btn { flex:1; }
+}
+.hidden-file{display:none}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.status{font-size:12px;font-weight:700;padding:6px 10px;border-radius:999px;background:rgba(255,255,255,.14);white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="header-inner">
+      <div class="brand">
+        <div class="logo">⚙️</div>
+        <div><h1>Controle de Equipamentos</h1><div class="header-sub">Cadastro técnico • banco compartilhado</div></div>
+      </div>
+      <div class="status" id="syncStatus" title="Situação da conexão">Conectando…</div>
+    </div>
+  </header>
+  <main>
+    <div class="top-actions">
+      <button class="btn btn-primary" id="newBtn">＋ Novo cadastro</button>
+      <button class="btn btn-secondary" id="catalogToggle">☷ Banco de opções</button>
+      <button class="btn btn-secondary" id="exportBtn" type="button">⬇ Exportar Excel</button>
+      <button class="btn btn-secondary" id="importBtn" type="button">⬆ Importar</button>
+      <input type="file" id="importFile" accept=".xlsx,.xls,.csv" class="hidden">
+      <button class="btn btn-secondary hidden" id="migrateBtn" type="button"></button>
+      <div class="search"><input id="searchInput" type="search" placeholder="Pesquisar Cod. CM, marca, modelo ou cliente..."></div>
+    </div>
+
+    <section id="catalogCard" class="form-card hidden">
+      <div class="section-title">Banco de opções <span>Catálogos locais e editáveis</span></div>
+      <p class="note" style="margin:0 0 14px">Escolha uma categoria e acrescente marcas, modelos, viscosidades ou códigos de filtros usados na sua frota. As opções ficam salvas neste navegador.</p>
+      <div class="grid">
+        <div class="field"><label for="catalogCategory">Categoria</label>
+          <select id="catalogCategory">
+            <option value="brands">Marcas de caminhões</option>
+            <option value="models">Modelos de caminhões (por marca)</option>
+            <option value="oilDiff">Óleo do diferencial</option>
+            <option value="oilTrans">Óleo da transmissão</option>
+            <option value="oilMotor">Óleo do motor</option>
+            <option value="filterAir">Filtros de ar</option>
+            <option value="filterOil">Filtros de óleo</option>
+            <option value="filterRacor">Filtros Racor / combustível</option>
+            <option value="filterFuel">Filtros de combustível</option>
+            <option value="filterCabin">Filtros de ar-condicionado / cabine</option>
+          </select>
+        </div>
+        <div class="field hidden" id="catalogBrandWrap"><label for="catalogBrand">Marca do modelo</label><input id="catalogBrand" list="brandOptions" placeholder="Ex.: Scania"></div>
+        <div class="field"><label for="catalogValue">Nova opção</label><input id="catalogValue" placeholder="Digite a marca, modelo ou código"></div>
+      </div>
+      <div class="form-actions" style="justify-content:flex-start;margin-top:12px">
+        <button class="btn btn-primary" id="addCatalogItem" type="button">Adicionar opção</button>
+      </div>
+      <div id="catalogSummary" class="note"></div>
+    </section>
+    <section id="formCard" class="form-card hidden">
+      <div class="section-title"><div id="formTitle">Novo equipamento</div><span>* Campos principais</span></div>
+      <form id="equipmentForm">
+        <div class="form-section">
+          <div class="section-title">Identificação</div>
+          <div class="grid">
+            <div class="field"><label for="cod">Cod. CM *</label><input id="cod" required autocomplete="off" placeholder="Código CM"></div>
+            <div class="field"><label for="marca">Marca *</label><input id="marca" list="brandOptions" required placeholder="Fabricante"><datalist id="brandOptions"></datalist></div>
+            <div class="field"><label for="modelo">Modelo *</label><input id="modelo" list="modelOptions" required placeholder="Modelo"><datalist id="modelOptions"></datalist></div>
+            <div class="field"><label for="ano">Ano</label><input id="ano" inputmode="numeric" maxlength="4" placeholder="Ex.: 2022"></div>
+            <div class="field full"><label for="cliente">Cliente</label><input id="cliente" placeholder="Nome do cliente"></div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="section-title">Filtros <span>Até 3 códigos por categoria</span></div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Filtro de ar</label>
+            <div class="filter-row">
+              <div class="field"><label for="ar1">Opção 1</label><input id="ar1" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="ar2">Opção 2</label><input id="ar2" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="ar3">Opção 3</label><input id="ar3" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Filtro de óleo</label>
+            <div class="filter-row">
+              <div class="field"><label for="fo1">Opção 1</label><input id="fo1" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="fo2">Opção 2</label><input id="fo2" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="fo3">Opção 3</label><input id="fo3" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Filtro do Racor</label>
+            <div class="filter-row">
+              <div class="field"><label for="racor1">Opção 1</label><input id="racor1" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="racor2">Opção 2</label><input id="racor2" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="racor3">Opção 3</label><input id="racor3" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Filtro de combustível</label>
+            <div class="filter-row">
+              <div class="field"><label for="comb1">Opção 1</label><input id="comb1" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="comb2">Opção 2</label><input id="comb2" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="comb3">Opção 3</label><input id="comb3" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Filtro do ar-condicionado</label>
+            <div class="filter-row">
+              <div class="field"><label for="ac1">Opção 1</label><input id="ac1" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="ac2">Opção 2</label><input id="ac2" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+              <div class="field"><label for="ac3">Opção 3</label><input id="ac3" autocomplete="off" placeholder="Código / tipo do filtro"></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="section-title">Óleos e capacidades</div>
+          <div class="field">
+            <label>Óleo do diferencial</label>
+            <div class="oil-row"><input id="difTipo" list="oilDiffOptions" placeholder="Especificação / tipo do óleo"><datalist id="oilDiffOptions"></datalist><input id="difLitros" type="number" min="0" step="0.1" placeholder="Litros"></div>
+          </div>
+          <div class="field">
+            <label>Óleo da transmissão</label>
+            <div class="oil-row"><input id="transTipo" list="oilTransOptions" placeholder="Especificação / tipo do óleo"><datalist id="oilTransOptions"></datalist><input id="transLitros" type="number" min="0" step="0.1" placeholder="Litros"></div>
+          </div>
+          <div class="field">
+            <label>Óleo do motor</label>
+            <div class="oil-row"><input id="motorTipo" list="oilMotorOptions" placeholder="Especificação / tipo do óleo"><datalist id="oilMotorOptions"></datalist><input id="motorLitros" type="number" min="0" step="0.1" placeholder="Litros"></div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+          <button type="submit" class="btn btn-primary" id="saveBtn">Salvar cadastro</button>
+        </div>
+        <datalist id="filterAirOptions"></datalist>
+        <datalist id="filterOilOptions"></datalist>
+        <datalist id="filterRacorOptions"></datalist>
+        <datalist id="filterCabinOptions"></datalist>
+        <datalist id="filterFuelOptions"></datalist>
+      </form>
+    </section>
+
+    <section class="list-card">
+      <div class="list-head"><div class="section-title" style="margin:0">Equipamentos cadastrados</div><div class="count" id="count">0 registros</div></div>
+      <div id="equipmentList"></div>
+      <div class="note">A exportação gera a planilha no mesmo formato do BD_SITE_OLEO.xlsx (abas CADASTROS e MOD_CAMINHOES); a importação aceita esse mesmo formato. Os cadastros ficam gravados no banco compartilhado desta página e aparecem para todas as pessoas com acesso, em tempo real. Exporte para Excel periodicamente como cópia de segurança.</div>
+    </section>
+  </main>
+</div>
+
+<div id="modalBackdrop" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-head"><h2 id="modalTitle">Detalhes do equipamento</h2><button class="icon-btn" id="closeModal" aria-label="Fechar">✕</button></div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+<div id="toast" class="toast hidden" role="status"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const STORAGE_KEY = "controle_equipamentos_v1";
+let records = [];
+let localRecords = loadRecords();
+let db = null;
+let editingId = null;
+const $ = id => document.getElementById(id);
+const fields = [
+  "cod","marca","modelo","ano","cliente",
+  "ar1","ar2","ar3","fo1","fo2","fo3",
+  "racor1","racor2","racor3","comb1","comb2","comb3","ac1","ac2","ac3",
+  "difTipo","difLitros","transTipo","transLitros","motorTipo","motorLitros"
+];
+
+const BASE_MODELS = {"Mercedes-Benz":["Accelo 715","Accelo 815","Accelo 1016","Accelo 1017","Atego 1419","Atego 1519","Atego 1719","Atego 1726","Atego 1730","Atego 1733","Atego 2426","Atego 2429","Atego 2430","Atego 2433","Axor 1933","Axor 2035","Axor 2036","Axor 2038","Axor 2040","Axor 2540","Axor 2544","Axor 2640","Axor 2644","Axor 3344","Actros 2045","Actros 2546","Actros 2651","Actros 2653","Actros 2655","Atron 1319","Atron 1635","L 1113","L 1114","L 1313","L 1316","L 1513","L 1516","L 1618","L 1620","L 1622","L 1625","L 1630","L 1634","L 1935","LS 1938","LS 2635"],"Volkswagen":["Delivery 5.150","Delivery 6.160","Delivery 8.160","Delivery 9.170","Delivery 9.180","Delivery 10.160","Delivery 11.180","Worker 8.120","Worker 8.150","Worker 9.150","Worker 13.180","Worker 15.180","Worker 17.180","Worker 17.220","Worker 23.220","Worker 24.220","Worker 26.220","Worker 26.260","Constellation 13.180","Constellation 15.180","Constellation 17.190","Constellation 17.210","Constellation 17.230","Constellation 17.250","Constellation 19.330","Constellation 24.250","Constellation 24.280","Constellation 25.360","Constellation 26.260","Constellation 26.280","Constellation 26.320","Constellation 31.320","Constellation 31.330","Constellation 31.390","Constellation 32.360","Meteor 28.460","Meteor 29.520"],"Volvo":["VM 210","VM 220","VM 240","VM 260","VM 270","VM 290","VM 310","VM 330","VM 360","FH 400","FH 420","FH 440","FH 460","FH 480","FH 500","FH 540","FH 550","FH 600","FM 370","FM 380","FM 400","FM 410","FM 420","FM 440","FM 460","FMX 460","FMX 500","N10","N12","NL10","NL12"],"Scania":["P 230","P 250","P 270","P 280","P 310","P 320","P 340","P 360","P 400","G 380","G 400","G 410","G 420","G 440","G 450","G 480","R 400","R 420","R 440","R 450","R 470","R 480","R 500","R 540","R 560","R 620","S 450","S 500","S 540","S 560","S 620","93","94","111","112","113","114","124","142","143"],"Iveco":["Daily 35S14","Daily 45S17","Daily 55C17","Daily 70C17","Daily 70C18","Tector 9-190","Tector 11-190","Tector 11-210","Tector 15-210","Tector 17-280","Tector 17-300","Tector 24-280","Tector 24-300","Hi-Road 440","Hi-Way 440","Hi-Way 480","Hi-Way 560","S-Way 480","S-Way 540"],"DAF":["CF 310","CF 330","CF 370","CF 410","CF 440","XF 410","XF 430","XF 460","XF 480","XF 530"],"Ford":["F-350","F-4000","F-600","F-700","F-750","F-800","F-11000","F-12000","F-13000","F-14000","F-16000","F-19000","Cargo 712","Cargo 815","Cargo 816","Cargo 1119","Cargo 1317","Cargo 1517","Cargo 1717","Cargo 1722","Cargo 1723","Cargo 1932","Cargo 2422","Cargo 2428","Cargo 2622","Cargo 2628","Cargo 2831","Cargo 2932","Cargo 3031"],"Agrale":["A7500","A8700","A10000","A11000","A13000"],"Hyundai":["HD65","HD78","Mighty"],"JAC":["N601","N650","N710","N750","N900","N1200"],"Foton":["Aumark 6T","Aumark 9T","Aumark 11T","Auman"],"International":["9800","9800i","9200i"],"Chevrolet":["D40","D60","D70","11000","13000","14000","15000"],"GMC":["6-100","7-110","12-170","14-190"],"Sinotruk":["Howo","A7"],"Shacman":["X3000","X5000"]};
+const DEFAULT_CATALOGS = {
+  brands: [...new Set(["Agrale","DAF","Foton","Ford","Iveco","JAC","Mercedes-Benz","Mitsubishi Fuso","Scania","Volkswagen","Volvo","International","Hyundai","MAN","Renault Trucks","Shacman","Sinotruk","Hino","Isuzu","Chevrolet",...Object.keys(BASE_MODELS)])].sort((a,b)=>a.localeCompare(b,"pt-BR")),
+  filterFuel: ["Filtro de combustível primário","Filtro de combustível secundário","Pré-filtro de combustível"],
+  oilDiff: ["SAE 75W-90","SAE 80W-90","SAE 85W-140","API GL-4","API GL-5","Óleo hipóide","Óleo sintético para diferencial","Óleo mineral para diferencial"],
+  oilTrans: ["SAE 30","SAE 40","SAE 50","SAE 75W-80","SAE 75W-90","SAE 80W","SAE 80W-90","ATF","ATF Dexron III","Óleo de transmissão manual","Óleo para transmissão automatizada","Óleo UTTO","Óleo STOU"],
+  oilMotor: ["SAE 10W-30","SAE 10W-40","SAE 15W-40","SAE 5W-30","SAE 5W-40","SAE 20W-50","API CK-4","API CJ-4","API CI-4","ACEA E4","ACEA E7","ACEA E9","Óleo mineral","Óleo semissintético","Óleo sintético"],
+  filterAir: ["Filtro de ar primário","Filtro de ar secundário / segurança","Elemento externo","Elemento interno","Filtro de ar tipo cartucho"],
+  filterOil: ["Filtro lubrificante rosqueável","Elemento filtrante de óleo","Filtro de óleo principal","Filtro de óleo secundário / by-pass"],
+  filterRacor: ["Filtro separador de água e diesel (Racor)","Elemento separador de água","Filtro de combustível primário","Filtro de combustível secundário","Copo / elemento sedimentador"],
+  filterCabin: ["Filtro de cabine / ar-condicionado","Filtro de cabine de partículas","Filtro de cabine com carvão ativado","Filtro de climatização"]
+};
+const CATALOG_KEY = "controle_equipamentos_catalogos_v1";
+let catalogs = loadCatalogs();
+function loadCatalogs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(CATALOG_KEY) || "null");
+    if (!saved) return JSON.parse(JSON.stringify(DEFAULT_CATALOGS));
+    const merged = {};
+    Object.keys(DEFAULT_CATALOGS).forEach(k => merged[k] = [...new Set([...(DEFAULT_CATALOGS[k] || []), ...(saved[k] || [])])]);
+    return merged;
+  } catch { return JSON.parse(JSON.stringify(DEFAULT_CATALOGS)); }
+}
+function saveCatalogs() { try { localStorage.setItem(CATALOG_KEY, JSON.stringify(catalogs)); } catch {} scheduleConfigSync(); }
+function setOptions(id, values) {
+  const list = $(id);
+  if (list) list.innerHTML = values.map(v => `<option value="${escapeHtml(v)}"></option>`).join("");
+}
+function refreshCatalogOptions() {
+  setOptions("brandOptions", catalogs.brands);
+  setOptions("filterFuelOptions", catalogs.filterFuel);
+  refreshModelOptions();
+  setOptions("oilDiffOptions", catalogs.oilDiff);
+  setOptions("oilTransOptions", catalogs.oilTrans);
+  setOptions("oilMotorOptions", catalogs.oilMotor);
+  setOptions("filterAirOptions", catalogs.filterAir);
+  setOptions("filterOilOptions", catalogs.filterOil);
+  setOptions("filterRacorOptions", catalogs.filterRacor);
+  setOptions("filterCabinOptions", catalogs.filterCabin);
+  renderCatalogSummary();
+}
+function renderCatalogSummary() {
+  const names = {brands:"marcas",models:"modelos",oilDiff:"óleos de diferencial",oilTrans:"óleos de transmissão",oilMotor:"óleos de motor",filterAir:"tipos de filtro de ar",filterOil:"tipos de filtro de óleo",filterRacor:"tipos de filtro Racor/combustível",filterCabin:"tipos de filtro de cabine"};
+  names.filterFuel="tipos de filtro de combustível";
+  $("catalogSummary").innerHTML = `<div><b>modelos:</b> ${Object.values(modelsMap).reduce((n,a)=>n+a.length,0)} em ${Object.keys(modelsMap).length} marcas</div>` + Object.keys(catalogs).map(k => `<div><b>${names[k]}:</b> ${catalogs[k].length} opções</div>`).join("");
+}
+function loadRecords() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+  catch { return []; }
+}
+function persist() {
+  if (db) return;
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(records)); } catch {}
+}
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function showToast(message) {
+  $("toast").textContent = message;
+  $("toast").classList.remove("hidden");
+  setTimeout(() => $("toast").classList.add("hidden"), 2300);
+}
+function openForm(record = null) {
+  editingId = record ? record.id : null;
+  $("equipmentForm").reset();
+  if (record) fields.forEach(id => $(id).value = record[id] ?? "");
+  $("formTitle").textContent = record ? "Editar equipamento" : "Novo equipamento";
+  $("saveBtn").textContent = record ? "Salvar alterações" : "Salvar cadastro";
+  $("formCard").classList.remove("hidden");
+  $("formCard").scrollIntoView({behavior:"smooth", block:"start"});
+}
+function closeForm() {
+  $("formCard").classList.add("hidden");
+  $("equipmentForm").reset();
+  editingId = null;
+}
+function renderList() {
+  const query = $("searchInput").value.trim().toLocaleLowerCase("pt-BR");
+  const filtered = records.filter(r => [r.cod,r.marca,r.modelo,r.cliente].some(v => String(v || "").toLocaleLowerCase("pt-BR").includes(query)));
+  $("count").textContent = `${filtered.length} ${filtered.length === 1 ? "registro" : "registros"}`;
+  if (!filtered.length) {
+    $("equipmentList").innerHTML = `<div class="empty"><div style="font-size:30px">🛠️</div><strong>${query ? "Nenhum equipamento encontrado" : "Nenhum cadastro ainda"}</strong><span>${query ? "Tente pesquisar por outro termo." : "Toque em “Novo cadastro” para adicionar o primeiro equipamento."}</span></div>`;
+    return;
+  }
+  $("equipmentList").innerHTML = filtered.map(r => `
+    <article class="equipment">
+      <div class="equipment-main">
+        <div class="equipment-name">${escapeHtml(r.cod)} · ${escapeHtml(r.marca)} ${escapeHtml(r.modelo)}</div>
+        <div class="equipment-meta">${escapeHtml(r.ano || "Ano não informado")} · ${escapeHtml(r.cliente || "Cliente não informado")}</div>
+      </div>
+      <div class="equipment-actions">
+        <button class="icon-btn" title="Visualizar" aria-label="Visualizar" data-action="view" data-id="${r.id}">👁️</button>
+        <button class="icon-btn" title="Duplicar" aria-label="Duplicar" data-action="dup" data-id="${r.id}">📋</button>
+        <button class="icon-btn" title="Editar" aria-label="Editar" data-action="edit" data-id="${r.id}">✏️</button>
+        <button class="icon-btn" title="Excluir" aria-label="Excluir" data-action="delete" data-id="${r.id}">🗑️</button>
+      </div>
+    </article>`).join("");
+}
+function val(id) { return $(id).value.trim(); }
+$("equipmentForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const data = {};
+  fields.forEach(id => data[id] = val(id));
+  if (records.some(r => r.cod.toLocaleLowerCase("pt-BR") === data.cod.toLocaleLowerCase("pt-BR") && r.id !== editingId)) {
+    alert("Já existe um equipamento cadastrado com este Cod. CM.");
+    $("cod").focus();
+    return;
+  }
+  if (editingId) {
+    records = records.map(r => r.id === editingId ? {...r, ...data} : r);
+    syncRecord(records.find(r => r.id === editingId));
+    showToast("Cadastro atualizado com sucesso.");
+  } else {
+    const nr = {id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())), ...data, createdAt: new Date().toISOString()};
+    records.unshift(nr);
+    syncRecord(nr);
+    showToast("Equipamento cadastrado com sucesso.");
+  }
+  learnRecord(data);
+  persist();
+  closeForm();
+  renderList();
+});
+$("newBtn").addEventListener("click", () => openForm());
+$("cancelBtn").addEventListener("click", closeForm);
+$("searchInput").addEventListener("input", renderList);
+$("equipmentList").addEventListener("click", event => {
+  const button = event.target.closest("button[data-action]");
+  if (!button) return;
+  const record = records.find(r => r.id === button.dataset.id);
+  if (!record) return;
+  if (button.dataset.action === "edit") openForm(record);
+  if (button.dataset.action === "dup") { openForm({...record, id:null, cod:""}); $("formTitle").textContent = "Novo equipamento (cópia de "+record.cod+")"; $("cod").focus(); }
+  if (button.dataset.action === "view") showDetails(record);
+  if (button.dataset.action === "delete") {
+    if (confirm(`Deseja realmente excluir o equipamento ${record.cod} - ${record.marca} ${record.modelo}?`)) {
+      records = records.filter(r => r.id !== record.id);
+      removeRecord(record.id);
+      persist();
+      renderList();
+      showToast("Cadastro excluído.");
+    }
+  }
+});
+function detail(label, value, suffix = "") {
+  return `<div class="detail-item"><small>${escapeHtml(label)}</small><b>${escapeHtml(value || "Não informado")}${value && suffix ? " " + suffix : ""}</b></div>`;
+}
+function showDetails(r) {
+  const filterGroup = (title, ids) => `<div class="form-section"><div class="section-title">${title}</div><div class="detail-grid">${ids.map((id,i)=>detail("Opção "+(i+1),r[id])).join("")}</div></div>`;
+  const oil = (title,type,litres) => `<div class="form-section"><div class="section-title">${title}</div><div class="detail-grid">${detail("Especificação",r[type])}${detail("Quantidade",r[litres],"litros")}</div></div>`;
+  $("modalTitle").textContent = `${r.cod} · ${r.marca} ${r.modelo}`;
+  $("modalContent").innerHTML = `
+    <div class="detail-grid">
+      ${detail("Cod. CM",r.cod)}${detail("Marca",r.marca)}${detail("Modelo",r.modelo)}${detail("Ano",r.ano)}${detail("Cliente",r.cliente)}
+    </div>
+    ${filterGroup("Filtro de ar",["ar1","ar2","ar3"])}
+    ${filterGroup("Filtro de óleo",["fo1","fo2","fo3"])}
+    ${filterGroup("Filtro do Racor",["racor1","racor2","racor3"])}
+    ${filterGroup("Filtro de combustível",["comb1","comb2","comb3"])}
+    ${filterGroup("Filtro do ar-condicionado",["ac1","ac2","ac3"])}
+    ${oil("Óleo do diferencial","difTipo","difLitros")}
+    ${oil("Óleo da transmissão","transTipo","transLitros")}
+    ${oil("Óleo do motor","motorTipo","motorLitros")}
+    <div class="form-actions"><button class="btn btn-secondary" id="detailEdit">Editar cadastro</button></div>`;
+  $("modalBackdrop").classList.remove("hidden");
+  $("detailEdit").addEventListener("click", () => {
+    $("modalBackdrop").classList.add("hidden");
+    openForm(r);
+  });
+}
+$("closeModal").addEventListener("click", () => $("modalBackdrop").classList.add("hidden"));
+$("modalBackdrop").addEventListener("click", e => { if (e.target === $("modalBackdrop")) $("modalBackdrop").classList.add("hidden"); });
+$("catalogToggle").addEventListener("click", () => {
+  $("catalogCard").classList.toggle("hidden");
+  $("catalogCard").scrollIntoView({behavior:"smooth",block:"start"});
+});
+$("addCatalogItem").addEventListener("click", () => {
+  const key = $("catalogCategory").value;
+  const value = $("catalogValue").value.trim();
+  if (!value) { $("catalogValue").focus(); return; }
+  if (key === "models") { addModel($("catalogBrand").value.trim(), value); return; }
+  if (catalogs[key].some(x => x.toLocaleLowerCase("pt-BR") === value.toLocaleLowerCase("pt-BR"))) {
+    showToast("Essa opção já existe no catálogo."); return;
+  }
+  catalogs[key].push(value);
+  catalogs[key].sort((a,b) => a.localeCompare(b,"pt-BR"));
+  saveCatalogs();
+  refreshCatalogOptions();
+  $("catalogValue").value = "";
+  showToast("Opção adicionada ao banco local.");
+});
+$("marca").addEventListener("input", refreshModelOptions);
+$("marca").addEventListener("change", () => { refreshModelOptions(); $("modelo").focus(); });
+$("catalogCategory").addEventListener("change", () => $("catalogBrandWrap").classList.toggle("hidden", $("catalogCategory").value !== "models"));
+
+/* ===== Marcas/modelos (aba MOD_CAMINHOES) ===== */
+const MODELS_KEY = "controle_equipamentos_modelos_v1";
+let customModels = (() => { try { return JSON.parse(localStorage.getItem(MODELS_KEY) || "{}"); } catch { return {}; } })();
+const modelsMap = {};
+Object.keys(BASE_MODELS).forEach(b => modelsMap[b] = [...BASE_MODELS[b]]);
+Object.keys(customModels).forEach(b => customModels[b].forEach(m => pushModel(b, m)));
+function ci(a) { return String(a).toLocaleLowerCase("pt-BR"); }
+function brandKey(b) { return Object.keys(modelsMap).find(k => ci(k) === ci(b.trim())); }
+function pushModel(brand, model) {
+  brand = brand.trim(); model = model.trim();
+  if (!brand || !model) return false;
+  const k = brandKey(brand) || brand;
+  const list = modelsMap[k] = modelsMap[k] || [];
+  if (list.some(x => ci(x) === ci(model))) return false;
+  list.push(model); return true;
+}
+function saveCustomModel(brand, model) {
+  const k = brandKey(brand) || brand.trim();
+  const inBase = (BASE_MODELS[k] || []).some(x => ci(x) === ci(model));
+  if (inBase) return;
+  customModels[k] = customModels[k] || [];
+  if (!customModels[k].some(x => ci(x) === ci(model))) customModels[k].push(model.trim());
+  try { localStorage.setItem(MODELS_KEY, JSON.stringify(customModels)); } catch {}
+  scheduleConfigSync();
+}
+function refreshModelOptions() {
+  const k = brandKey($("marca").value || "");
+  const list = k ? modelsMap[k] : [...new Set(Object.values(modelsMap).flat())];
+  setOptions("modelOptions", list);
+}
+function addModel(brand, model) {
+  if (!brand) { showToast("Informe a marca do modelo."); $("catalogBrand").focus(); return; }
+  if (!pushModel(brand, model)) { showToast("Esse modelo já existe para a marca."); return; }
+  if (!catalogs.brands.some(b => ci(b) === ci(brand))) { catalogs.brands.push(brand.trim()); catalogs.brands.sort((a,b)=>a.localeCompare(b,"pt-BR")); saveCatalogs(); }
+  saveCustomModel(brand, model);
+  refreshCatalogOptions();
+  $("catalogValue").value = "";
+  showToast("Modelo adicionado à marca.");
+}
+const LEARN_MAP = {ar1:"filterAir",ar2:"filterAir",ar3:"filterAir",fo1:"filterOil",fo2:"filterOil",fo3:"filterOil",racor1:"filterRacor",racor2:"filterRacor",racor3:"filterRacor",comb1:"filterFuel",comb2:"filterFuel",comb3:"filterFuel",ac1:"filterCabin",ac2:"filterCabin",ac3:"filterCabin",difTipo:"oilDiff",transTipo:"oilTrans",motorTipo:"oilMotor"};
+function learnRecord(r) {
+  // Memoriza marca, modelo, óleos e filtros novos para sugerir nos próximos cadastros
+  if (r.marca && !catalogs.brands.some(b => ci(b) === ci(r.marca))) catalogs.brands.push(r.marca);
+  if (r.marca && r.modelo && pushModel(r.marca, r.modelo)) saveCustomModel(r.marca, r.modelo);
+  Object.keys(LEARN_MAP).forEach(f => {
+    const v = (r[f] || "").trim(), list = catalogs[LEARN_MAP[f]];
+    if (v && !list.some(x => ci(x) === ci(v))) list.push(v);
+  });
+  saveCatalogs(); refreshCatalogOptions();
+}
+
+/* ===== Exportar / importar (formato BD_SITE_OLEO.xlsx) ===== */
+const XCOLS = [["COD_CM","cod"],["MARCA","marca"],["MODELO","modelo"],["ANO","ano"],["CLIENTE","cliente"],
+  ["FILTRO_AR1","ar1"],["FILTRO_AR2","ar2"],["FILTRO_AR3","ar3"],
+  ["FILTRO_RACOR1","racor1"],["FILTRO_RACOR2","racor2"],["FILTRO_RACOR3","racor3"],
+  ["FILTRO_OLEO1","fo1"],["FILTRO_OLEO2","fo2"],["FILTRO_OLEO3","fo3"],
+  ["FILTRO_COMBUSTIVEL1","comb1"],["FILTRO_COMBUSTIVEL2","comb2"],["FILTRO_COMBUSTIVEL3","comb3"],
+  ["OLEO_MOTOR","motorTipo"],["LITROS_OLEO_MOTOR","motorLitros"],
+  ["OLEO_DIFERENCIAL","difTipo"],["LITROS_OLEO_DIFERENCIAL","difLitros"],
+  ["OLEO_CAMBIO","transTipo"],["LITROS_OLEO_CAMBIO","transLitros"],
+  ["FILTRO_AC1","ac1"],["FILTRO_AC2","ac2"],["FILTRO_AC3","ac3"]];
+function stamp() { return new Date().toISOString().slice(0,10); }
+function download(blob, name) {
+  const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function csvCell(v) { v = String(v ?? ""); return /[;"\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; }
+function exportData() {
+  if (!records.length) { showToast("Não há cadastros para exportar."); return; }
+  const head = XCOLS.map(c => c[0]);
+  const rows = [...records].reverse().map(r => XCOLS.map(([, k]) => r[k] ?? ""));
+  if (window.XLSX) {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([head, ...rows]), "CADASTROS");
+    const mods = [["MARCA","MODELO"]];
+    Object.keys(modelsMap).forEach(b => modelsMap[b].forEach(m => mods.push([b, m])));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(mods), "MOD_CAMINHOES");
+    XLSX.writeFile(wb, `BD_SITE_OLEO_${stamp()}.xlsx`);
+    showToast("Planilha Excel exportada.");
+  } else {
+    const csv = "\ufeff" + [head, ...rows].map(r => r.map(csvCell).join(";")).join("\r\n");
+    download(new Blob([csv], {type:"text/csv;charset=utf-8"}), `CADASTROS_${stamp()}.csv`);
+    showToast("Sem conexão com a biblioteca Excel: exportado em CSV.");
+  }
+}
+function parseCSV(text) {
+  text = text.replace(/^\ufeff/, "");
+  const first = text.split(/\r?\n/)[0] || "";
+  const d = (first.match(/;/g) || []).length >= (first.match(/,/g) || []).length ? ";" : ",";
+  const out = []; let row = [], cell = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i+1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+    else if (c === '"') q = true;
+    else if (c === d) { row.push(cell); cell = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i+1] === "\n") i++; row.push(cell); out.push(row); row = []; cell = ""; }
+    else cell += c;
+  }
+  if (cell !== "" || row.length) { row.push(cell); out.push(row); }
+  return out;
+}
+function importRows(rows) {
+  if (!rows.length) return {added:0, updated:0, skipped:0};
+  const head = rows[0].map(h => String(h ?? "").trim().toUpperCase());
+  const idx = {}; XCOLS.forEach(([h, k]) => { const i = head.indexOf(h); if (i >= 0) idx[k] = i; });
+  if (idx.cod === undefined) throw new Error("Coluna COD_CM não encontrada.");
+  let added = 0, updated = 0, skipped = 0; const touched = [];
+  rows.slice(1).forEach(row => {
+    const data = {};
+    XCOLS.forEach(([, k]) => { if (idx[k] !== undefined) data[k] = String(row[idx[k]] ?? "").trim(); });
+    if (!data.cod) { skipped++; return; }
+    const existing = records.find(r => ci(r.cod) === ci(data.cod));
+    if (existing) { Object.assign(existing, data); updated++; touched.push(existing); }
+    else { records.unshift({id: (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()), ...Object.fromEntries(XCOLS.map(([, k]) => [k, ""])), ...data, createdAt: new Date().toISOString()}); added++; touched.push(records[0]); }
+    learnRecord(existing || records[0]);
+  });
+  return {added, updated, skipped, touched};
+}
+$("exportBtn").addEventListener("click", exportData);
+$("importBtn").addEventListener("click", () => $("importFile").click());
+$("importFile").addEventListener("change", async e => {
+  const file = e.target.files[0]; e.target.value = "";
+  if (!file) return;
+  try {
+    let rows;
+    if (/\.csv$/i.test(file.name)) rows = parseCSV(await file.text());
+    else {
+      if (!window.XLSX) { alert("A biblioteca Excel não carregou (sem internet). Salve a planilha como CSV e importe novamente."); return; }
+      const wb = XLSX.read(await file.arrayBuffer(), {type:"array"});
+      const mod = wb.Sheets["MOD_CAMINHOES"];
+      if (mod) XLSX.utils.sheet_to_json(mod, {header:1}).slice(1).forEach(([b, m]) => { if (b && m && pushModel(String(b), String(m))) saveCustomModel(String(b), String(m)); });
+      rows = XLSX.utils.sheet_to_json(wb.Sheets["CADASTROS"] || wb.Sheets[wb.SheetNames[0]], {header:1, defval:""});
+    }
+    const res = importRows(rows);
+    persist(); renderList(); refreshCatalogOptions();
+    if (db && res.touched.length) { showToast("Gravando no banco compartilhado…"); await syncMany(res.touched); }
+    showToast(`Importação: ${res.added} novos, ${res.updated} atualizados${res.skipped ? ", " + res.skipped + " ignorados" : ""}.`);
+  } catch (err) { alert("Não foi possível importar: " + err.message); }
+});
+
+/* ===== Banco compartilhado (db) ===== */
+function plain(r) { const o = {}; Object.keys(r).forEach(k => { if (r[k] !== undefined) o[k] = r[k]; }); return o; }
+async function syncRecord(r) {
+  if (!db || !r) return;
+  try { await db.doc("equipamentos/" + r.id).set(plain(r)); }
+  catch (e) { showToast(e && e.code === "not_granted" ? "Sem permissão para gravar. Peça acesso de colaborador." : "Não foi possível gravar no banco."); }
+}
+async function syncMany(list) { for (const r of list) await syncRecord(r); }
+async function removeRecord(id) {
+  if (!db) return;
+  try { await db.doc("equipamentos/" + id).delete(); } catch { showToast("Não foi possível excluir no banco."); }
+}
+function setStatus(t) { $("syncStatus").textContent = t; }
+let cfgTimer = null, remoteCfgJson = "";
+function configPayload() {
+  const p = {};
+  Object.keys(catalogs).forEach(k => p[k] = [...catalogs[k]].sort());
+  const models = [];
+  Object.keys(customModels).forEach(b => customModels[b].forEach(m => models.push(b + "|" + m)));
+  p.models = models.sort();
+  return p;
+}
+function scheduleConfigSync() {
+  if (!db) return;
+  clearTimeout(cfgTimer);
+  cfgTimer = setTimeout(async () => {
+    const p = configPayload();
+    if (JSON.stringify(p) === remoteCfgJson) return;
+    try { await db.doc("config/catalogos").set(p); remoteCfgJson = JSON.stringify(p); } catch {}
+  }, 700);
+}
+function applyRemoteConfig(d) {
+  Object.keys(catalogs).forEach(k => (d[k] || []).forEach(v => { if (!catalogs[k].some(x => ci(x) === ci(v))) catalogs[k].push(v); }));
+  (d.models || []).forEach(x => {
+    const i = x.indexOf("|"); if (i < 1) return;
+    const b = x.slice(0, i), m = x.slice(i + 1);
+    if (pushModel(b, m)) saveCustomModel(b, m);
+  });
+  const sorted = {}; Object.keys(d).forEach(k => sorted[k] = [...d[k]].sort());
+  remoteCfgJson = JSON.stringify(sorted);
+  refreshCatalogOptions();
+  scheduleConfigSync();
+}
+function offerMigration() {
+  const btn = $("migrateBtn");
+  if (!localRecords.length) return;
+  const pend = localRecords.filter(l => !records.some(r => ci(r.cod) === ci(l.cod)));
+  if (!pend.length) return;
+  btn.textContent = `⬆ Enviar ${pend.length} cadastro(s) salvos neste aparelho`;
+  btn.classList.remove("hidden");
+  btn.onclick = async () => {
+    btn.disabled = true; showToast("Enviando cadastros…");
+    await syncMany(pend);
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    localRecords = []; btn.classList.add("hidden"); btn.disabled = false;
+    showToast("Cadastros enviados ao banco compartilhado.");
+  };
+}
+async function initDb() {
+  try { db = (window.claude && claude.use) ? await claude.use("db") : null; } catch { db = null; }
+  if (!db) {
+    records = localRecords; setStatus("Somente neste aparelho");
+    $("syncStatus").title = "Banco compartilhado indisponível: abra a página pelo link e entre na sua conta.";
+    renderList(); return;
+  }
+  setStatus("Banco compartilhado");
+  let first = true;
+  db.collection("equipamentos").onSnapshot(snap => {
+    records = snap.docs.map(d => ({...d.data()})).sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")));
+    renderList();
+    if (first) { first = false; offerMigration(); }
+  }, () => setStatus("Sem conexão com o banco"));
+  db.doc("config/catalogos").onSnapshot(snap => { if (snap.exists) applyRemoteConfig(snap.data()); });
+}
+refreshCatalogOptions();
+renderList();
+initDb();
+</script>
+</body>
+</html>
